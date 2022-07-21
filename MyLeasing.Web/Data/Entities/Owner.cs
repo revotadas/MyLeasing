@@ -25,5 +25,7 @@ namespace MyLeasing.Web.Data.Entities {
 
         [Required]
         public string Address { get; set; }
+
+        public User User { get; set; }
     }
 }

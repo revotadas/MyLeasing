@@ -2,18 +2,22 @@
 using Microsoft.EntityFrameworkCore;
 using MyLeasing.Web.Data;
 using MyLeasing.Web.Data.Entities;
+using MyLeasing.Web.Helpers;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace MyLeasing.Web.Controllers {
     public class OwnersController : Controller {
         private readonly IOwnersRepository ownersRepository;
+        private readonly IUserHelper userHelper;
 
-        public OwnersController(IOwnersRepository ownersRepository) {
+        public OwnersController(IOwnersRepository ownersRepository, IUserHelper userHelper) {
             this.ownersRepository = ownersRepository;
+            this.userHelper = userHelper;
         }
 
         public IActionResult Index() {
-            return View(ownersRepository.GetAll());
+            return View(ownersRepository.GetAll().OrderBy(o => o.OwnerName));
         }
 
         public async Task<IActionResult> Details(int? id) {
@@ -38,6 +42,7 @@ namespace MyLeasing.Web.Controllers {
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Owner owner) {
             if(ModelState.IsValid) {
+                owner.User = await userHelper.GetUserByEmailAsync("rafael.lopes24@gmail.com");
                 await ownersRepository.CreateAsync(owner);
                 return RedirectToAction(nameof(Index));
             }
@@ -68,6 +73,7 @@ namespace MyLeasing.Web.Controllers {
 
             if(ModelState.IsValid) {
                 try {
+                    owner.User = await userHelper.GetUserByEmailAsync("rafael.lopes24@gmail.com");
                     await ownersRepository.UpdateAsync(owner);
                 } catch(DbUpdateConcurrencyException) {
                     if(!await ownersRepository.ExistAsync(owner.Id)) {
